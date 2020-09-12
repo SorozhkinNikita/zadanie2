@@ -15,6 +15,33 @@ fun normalSize(fileSize: Long): String {
     return "$fileSize Б"
 }
 
+fun longHumanFormat(fileOrDir: File): String {
+
+    return fileOrDir.name + ' ' + if (fileOrDir.canExecute()) "x" else {
+        ""
+    } +
+            if (fileOrDir.canRead()) "r" else {
+                ""
+            } +
+            if (fileOrDir.canWrite()) "w" else {
+                ""
+            } + ' ' +
+            fileOrDir.lastModified() + ' ' + normalSize(fileOrDir.length())
+}
+
+fun longFormat(fileOrDir: File): String {
+    return fileOrDir.name + ' ' + if (fileOrDir.canExecute()) "1" else {
+        "0"
+    } +
+            if (fileOrDir.canRead()) "1" else {
+                "0"
+            } +
+            if (fileOrDir.canWrite()) "1" else {
+                "0"
+            } + ' ' +
+            fileOrDir.lastModified() + ' ' + fileOrDir.length()
+}
+
 fun main(args: Array<String>) {
     require(args.size in 1..7)
     val dir = File(args[args.size - 1])
@@ -35,7 +62,7 @@ fun main(args: Array<String>) {
                 flagO = true
                 outputDirectory = args[flagNumber + 1]
             }
-            else -> require(File(args[flagNumber]).isDirectory)
+            else -> require(File(args[flagNumber]).isDirectory || File(args[flagNumber]).isFile)
         }
     }
 
@@ -43,33 +70,11 @@ fun main(args: Array<String>) {
         if (flagL) {
             if (flagH) /*l and h*/ {
                 for (item in dir.listFiles()!!) {
-                    output.add(
-                        item.name + ' ' + if (item.canExecute()) "x" else {
-                            ""
-                        } +
-                                if (item.canRead()) "r" else {
-                                    ""
-                                } +
-                                if (item.canWrite()) "w" else {
-                                    ""
-                                } + ' ' +
-                                item.lastModified() + ' ' + normalSize(item.length())
-                    )
+                    output.add(longHumanFormat(item))
                 }
             } else /*only l*/ {
                 for (item in dir.listFiles()!!) {
-                    output.add(
-                        item.name + ' ' + if (item.canExecute()) "1" else {
-                            "0"
-                        } +
-                                if (item.canRead()) "1" else {
-                                    "0"
-                                } +
-                                if (item.canWrite()) "1" else {
-                                    "0"
-                                } + ' ' +
-                                item.lastModified() + ' ' + item.length()
-                    )
+                    output.add(longFormat(item))
                 }
             }
         } else /*short format*/ {
@@ -82,31 +87,9 @@ fun main(args: Array<String>) {
     } else {
         if (flagL) {
             if (flagH) /*l and h*/ {
-                output.add(
-                    dir.name + ' ' + if (dir.canExecute()) "x" else {
-                        ""
-                    } +
-                            if (dir.canRead()) "r" else {
-                                ""
-                            } +
-                            if (dir.canWrite()) "w" else {
-                                ""
-                            } + ' ' +
-                            dir.lastModified() + ' ' + normalSize(dir.length())
-                )
+                output.add(longHumanFormat(dir))
             } else /*only l*/ {
-                output.add(
-                    dir.name + ' ' + if (dir.canExecute()) "1" else {
-                        "0"
-                    } +
-                            if (dir.canRead()) "1" else {
-                                "0"
-                            } +
-                            if (dir.canWrite()) "1" else {
-                                "0"
-                            } + ' ' +
-                            dir.lastModified() + ' ' + dir.length()
-                )
+                output.add(longFormat(dir))
             }
         } else /*short format*/ {
             for (item in dir.listFiles()!!) {
