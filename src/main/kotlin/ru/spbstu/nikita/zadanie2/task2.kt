@@ -3,9 +3,9 @@ package ru.spbstu.nikita.zadanie2
 import java.io.File
 
 fun normalSize(fileSize: Long): String {
-    val giga = 1073741824 //2^30
-    val mega = 1048576 //2^20
-    val kilo = 1024 //2^10
+    val giga = 1024 * 1024 * 1024
+    val mega = 1024 * 1024
+    val kilo = 1024
     if (fileSize >= giga)
         return "${fileSize / giga} ГБ"
     if (fileSize >= mega)
@@ -13,6 +13,12 @@ fun normalSize(fileSize: Long): String {
     if (fileSize >= kilo)
         return "${fileSize / kilo} КБ"
     return "$fileSize Б"
+}
+
+fun longOrLongHuman(fileOrDir: File, longF: Boolean, humanF: Boolean): String = when {
+    longF && humanF -> longHumanFormat(fileOrDir)
+    longF -> longFormat(fileOrDir)
+    else -> fileOrDir.name
 }
 
 fun longHumanFormat(fileOrDir: File): String {
@@ -42,6 +48,7 @@ fun longFormat(fileOrDir: File): String {
             fileOrDir.lastModified() + ' ' + fileOrDir.length()
 }
 
+
 fun main(args: Array<String>) {
     require(args.size in 1..7)
     val dir = File(args[args.size - 1])
@@ -50,62 +57,37 @@ fun main(args: Array<String>) {
     var flagR = false
     var flagO = false
     val itsFile = dir.isFile
-    val output = mutableListOf<String>()
-    var outputDirectory = String()
+    var output = mutableListOf<String>()
+    var outputName = String()
     require(dir.exists())
-    for (flagNumber in 1..args.size - 2) {
+    var validArgs = setOf("-l", "-h", "-r", "-o", "ls")
+
+    for (flagNumber in 0..args.size - 2) {
         when (args[flagNumber]) {
             "-l" -> flagL = true
             "-h" -> flagH = true
             "-r" -> flagR = true
             "-o" -> {
                 flagO = true
-                outputDirectory = args[flagNumber + 1]
+                outputName = args[flagNumber + 1]
+                require(File(outputName).exists())
+                validArgs += outputName
             }
-            else -> require(File(args[flagNumber]).isDirectory || File(args[flagNumber]).isFile)
+            else -> require(args[flagNumber] in validArgs) //проверка на лишние аргументы
         }
     }
-
-    if (!itsFile) /*folder*/ {
-        if (flagL) {
-            if (flagH) /*l and h*/ {
-                for (item in dir.listFiles()!!) {
-                    output.add(longHumanFormat(item))
-                }
-            } else /*only l*/ {
-                for (item in dir.listFiles()!!) {
-                    output.add(longFormat(item))
-                }
-            }
-        } else /*short format*/ {
-            for (item in dir.listFiles()!!) {
-                output.add(item.name)
-            }
-        }
-        output.sorted()
-        if (flagR) output.reverse()
-    } else {
-        if (flagL) {
-            if (flagH) /*l and h*/ {
-                output.add(longHumanFormat(dir))
-            } else /*only l*/ {
-                output.add(longFormat(dir))
-            }
-        } else /*short format*/ {
-            for (item in dir.listFiles()!!) {
-                output.add(dir.name)
-            }
-        }
-    }
+    if (!itsFile) {
+        for (item in dir.listFiles()!!) output.add(longOrLongHuman(item, flagL, flagH))
+        if (flagR) output.reverse() else output.sort()
+    } else output.add(longOrLongHuman(dir, flagL, flagH))
 
     if (!flagO) /*Вывод ответа в консоль*/ {
         for (item in output) println(item)
-    } else /*Вывод ответа в файл*/ {
-        val writer = File(outputDirectory).bufferedWriter()
-        for (item in output) {
-            writer.write(item)
-            writer.newLine()
+    } else /*Вывод ответа в файл*/
+        File(outputName).bufferedWriter().use { out ->
+            output.forEach {
+                out.write(it)
+                out.newLine()
+            }
         }
-        writer.close()
-    }
 }
