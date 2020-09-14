@@ -1,11 +1,13 @@
 package ru.spbstu.nikita.zadanie2
 
 import java.io.File
+import java.lang.Exception
+import java.util.*
 
 fun normalSize(fileSize: Long): String {
-    val giga = 1024 * 1024 * 1024
-    val mega = 1024 * 1024
-    val kilo = 1024
+    val giga = 1024 * 1024 * 1024.0
+    val mega = 1024 * 1024.0
+    val kilo = 1024.0
     if (fileSize >= giga)
         return "${fileSize / giga} ГБ"
     if (fileSize >= mega)
@@ -31,8 +33,8 @@ fun longHumanFormat(fileOrDir: File): String {
             } +
             if (fileOrDir.canWrite()) "w" else {
                 ""
-            } + ' ' +
-            fileOrDir.lastModified() + ' ' + normalSize(fileOrDir.length())
+            } + "     " +
+            Date(fileOrDir.lastModified()) + "     " + normalSize(fileOrDir.length())
 }
 
 fun longFormat(fileOrDir: File): String {
@@ -57,12 +59,11 @@ fun main(args: Array<String>) {
     var flagR = false
     var flagO = false
     val itsFile = dir.isFile
-    var output = mutableListOf<String>()
+    val output = mutableListOf<String>()
     var outputName = String()
     require(dir.exists())
-    var validArgs = setOf("-l", "-h", "-r", "-o", "ls")
-
-    for (flagNumber in 0..args.size - 2) {
+    var flagNumber = 0
+    while (flagNumber<args.size-1) {
         when (args[flagNumber]) {
             "-l" -> flagL = true
             "-h" -> flagH = true
@@ -70,15 +71,15 @@ fun main(args: Array<String>) {
             "-o" -> {
                 flagO = true
                 outputName = args[flagNumber + 1]
-                require(File(outputName).exists())
-                validArgs += outputName
+                flagNumber++
             }
-            else -> require(args[flagNumber] in validArgs) //проверка на лишние аргументы
+            else -> throw Exception("Invalid Argument")
         }
+        flagNumber++
     }
     if (!itsFile) {
         for (item in dir.listFiles()!!) output.add(longOrLongHuman(item, flagL, flagH))
-        if (flagR) output.reverse() else output.sort()
+        if (flagR) output.sortDescending() else output.sort()
     } else output.add(longOrLongHuman(dir, flagL, flagH))
 
     if (!flagO) /*Вывод ответа в консоль*/ {
