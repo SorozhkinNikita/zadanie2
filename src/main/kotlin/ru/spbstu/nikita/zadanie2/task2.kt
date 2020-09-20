@@ -17,6 +17,15 @@ fun normalSize(fileSize: Long): String {
     return "$fileSize Б"
 }
 
+fun listFormation(flagR:Boolean,flagL:Boolean, flagH:Boolean,itsFile:Boolean,directory:File):List<String> {
+    val output = mutableListOf<String>()
+    if (!itsFile) {
+        for (item in directory.listFiles()!!) output.add(longOrLongHuman(item, flagL, flagH))
+        if (flagR) output.sortDescending() else output.sort()
+    } else output.add(longOrLongHuman(directory, flagL, flagH))
+    return output
+}
+
 fun longOrLongHuman(fileOrDir: File, longF: Boolean, humanF: Boolean): String = when {
     longF && humanF -> longHumanFormat(fileOrDir)
     longF -> longFormat(fileOrDir)
@@ -59,7 +68,6 @@ fun main(args: Array<String>) {
     var flagR = false
     var flagO = false
     val itsFile = dir.isFile
-    val output = mutableListOf<String>()
     var outputName = String()
     require(dir.exists())
     var flagNumber = 0
@@ -77,10 +85,7 @@ fun main(args: Array<String>) {
         }
         flagNumber++
     }
-    if (!itsFile) {
-        for (item in dir.listFiles()!!) output.add(longOrLongHuman(item, flagL, flagH))
-        if (flagR) output.sortDescending() else output.sort()
-    } else output.add(longOrLongHuman(dir, flagL, flagH))
+    val output = listFormation(flagR, flagL, flagH, itsFile, dir)
 
     if (!flagO) /*Вывод ответа в консоль*/ {
         for (item in output) println(item)
